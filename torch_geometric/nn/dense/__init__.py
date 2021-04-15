@@ -4,6 +4,7 @@ from .dense_graph_conv import DenseGraphConv
 from .dense_gin_conv import DenseGINConv
 from .diff_pool import dense_diff_pool
 from .mincut_pool import dense_mincut_pool
+from .mpr_pool import MPRPooling
 
 __all__ = [
     'DenseGCNConv',
@@ -12,6 +13,7 @@ __all__ = [
     'DenseSAGEConv',
     'dense_diff_pool',
     'dense_mincut_pool',
+    'MPRPooling'
 ]
 
 conv_classes = __all__[:4]
