@@ -109,6 +109,11 @@ Dense Pooling Layers
    :undoc-members:
    :exclude-members: training
 
+.. automodule:: torch_geometric.nn.dense.mpr_pool
+   :members:
+   :undoc-members:
+   :exclude-members: training
+
 Unpooling Layers
 ----------------
 .. currentmodule:: torch_geometric.nn.unpool
