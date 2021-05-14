@@ -175,7 +175,7 @@ class DGM:
         filtered_graph = self._filter_small_components(mapped_graph=mapped_graph)
 
         self._plot_graph(mapped_graph=filtered_graph,
-                         using_true_labels=use_true_labels,
+                         using_true_labels=False,
                          figsize=figsize,
                          node_size_scale=node_size_scale,
                          edge_width_scale=edge_width_scale,
@@ -183,6 +183,17 @@ class DGM:
                          discrete_colormap=discrete_colormap,
                          save_dir=save_dir,
                          name=name)
+
+        if use_true_labels:
+            self._plot_graph(mapped_graph=filtered_graph,
+                             using_true_labels=True,
+                             figsize=figsize,
+                             node_size_scale=node_size_scale,
+                             edge_width_scale=edge_width_scale,
+                             legend_dict=legend_dict,
+                             discrete_colormap=discrete_colormap,
+                             save_dir=save_dir,
+                             name=name)
 
     def _compute_embeddings(self, data: Data) -> np.ndarray:
         """
@@ -288,6 +299,7 @@ class DGM:
         # Assign to each original node the list of mapped nodes it has been mapped to
         original_node_to_mapped_nodes: Dict[int, List[int]] = {}
         mapped_nodes_color: Dict[int, Union[int, np.ndarray]] = {}
+        mapped_nodes_color_true_labels: Dict[int, Union[int, np.ndarray]] = {}
         mapped_nodes_size: Dict[int, int] = {}
 
         # Add a node to the mapped graph for each connected component in each of the pull back cover sets
@@ -307,17 +319,18 @@ class DGM:
                     original_node_to_mapped_nodes[node].append(mapped_graph_num_nodes)
 
                 # Compute the feature(s) of the new node defining its color in the visualization
+                conn_comp_embeddings = node_embeddings[list(conn_comp_nodes)]
+                conn_comp_color = np.mean(conn_comp_embeddings, axis=0)
+
+                mapped_nodes_color[mapped_graph_num_nodes] = conn_comp_color
+
+                # If true labels are available, compute also a coloring based on them
                 if node_true_labels is not None:
                     conn_comp_predictions = node_true_labels[list(conn_comp_nodes)]
                     labels, freq = np.unique(conn_comp_predictions, return_counts=True)
                     mapped_node_label = labels[np.argmax(freq)]
 
-                    mapped_nodes_color[mapped_graph_num_nodes] = mapped_node_label
-                else:
-                    conn_comp_embeddings = node_embeddings[list(conn_comp_nodes)]
-                    conn_comp_color = np.mean(conn_comp_embeddings, axis=0)
-
-                    mapped_nodes_color[mapped_graph_num_nodes] = conn_comp_color
+                    mapped_nodes_color_true_labels[mapped_graph_num_nodes] = mapped_node_label
 
                 # Compute the size of the new node
                 mapped_nodes_size[mapped_graph_num_nodes] = len(conn_comp_nodes_list)
@@ -326,6 +339,8 @@ class DGM:
         # Insert all the new nodes in the mapped graph
         mapped_graph.add_nodes_from(np.arange(mapped_graph_num_nodes))
         nx.set_node_attributes(mapped_graph, values=mapped_nodes_color, name='color')
+        if node_true_labels is not None:
+            nx.set_node_attributes(mapped_graph, values=mapped_nodes_color_true_labels, name='color_true_labels')
         nx.set_node_attributes(mapped_graph, values=mapped_nodes_size, name='size')
 
         # Compute the edges of the mapped graph
@@ -401,6 +416,15 @@ class DGM:
                                values=dict(zip(filtered_nodes, filtered_node_color)),
                                name='color')
 
+        # Recover coloring with true labels if available
+        node_color_true_labels = list(nx.get_node_attributes(mapped_graph, name='color_true_labels').values())
+        if len(node_color_true_labels) == node_color.shape[0]:
+            filtered_node_color_true_labels = np.array(node_color_true_labels)[nodes_mask]
+            nx.set_node_attributes(filtered_graph,
+                                   values=dict(zip(filtered_nodes, filtered_node_color_true_labels)),
+                                   name='color_true_labels')
+
+
         # Recover nodes size
         filtered_node_size = node_size[nodes_mask]
         nx.set_node_attributes(filtered_graph,
@@ -450,7 +474,13 @@ class DGM:
         edge_width = edge_weight * (edge_width_scale[1] - edge_width_scale[0]) + edge_width_scale[0]
 
         # Retrieve nodes color
-        node_color = np.array(list(nx.get_node_attributes(mapped_graph, name='color').values()))
+        if using_true_labels:
+            node_color = list(nx.get_node_attributes(mapped_graph, name='color_true_labels').values())
+            assert len(node_color) == node_size.shape[0]
+            node_color = np.array(node_color)
+        else:
+            node_color = np.array(list(nx.get_node_attributes(mapped_graph, name='color').values()))
+
         if self.num_dims == 2 and not using_true_labels:
             # Compute bivariate colormap
             node_color = DGM._make_2d_color_map(values_x=node_color[:, 0], values_y=node_color[:, 1])
