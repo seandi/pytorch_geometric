@@ -93,7 +93,7 @@ class DGM:
                         ) -> Union[np.ndarray, Tuple[np.ndarray, np.ndarray]]:
         """
         Generates self.num_intervals equally sized intervals in the [0,1] range such that each two consecutive
-        intervals have an overlap that is a self.overlap factor of the length of their union.
+        intervals have an overlap that is a self.overlap factor of the length of each interval.
         """
 
         # Find the interval length satisfying the constraints.
