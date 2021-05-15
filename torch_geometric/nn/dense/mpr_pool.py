@@ -27,9 +27,9 @@ class MPRPooling(nn.Module):
         out_nodes (int):
             The number of nodes in the pooled output graph.
         overlap (float):
-            The overlap ratio defined as the ratio between the
-            length of the overlap between two consecutive sub-intervals and
-            the length of each sub-interval.
+            The overlap ratio defined as the ratio between the length of the overlap between two consecutive
+            sub-intervals and the length of each sub-interval. Higher overlap will result in a more densely
+            connected pooled graph.
         eps (float):
             Small value used to provide numerical stability
             when normalizing the pagerank scores (dafault: :math:`10^{-9}`).
