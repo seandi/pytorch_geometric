@@ -39,6 +39,8 @@ class MPRPooling(nn.Module):
 
         self.eps = eps
         self.out_nodes = out_nodes
+        self.intervals = out_nodes
+        self.overlap = overlap
         self.intervals = self._make_1d_intervals()
 
     def forward(self, x: Tensor, edge_index: Adj) -> Tuple[Tensor, Adj]:
