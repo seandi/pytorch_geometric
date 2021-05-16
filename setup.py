@@ -15,6 +15,8 @@ install_requires = [
     'rdflib',
     'googledrivedownloader',
     'jinja2',
+    'graphviz',
+    'pydot',
 ]
 setup_requires = ['pytest-runner']
 tests_require = ['pytest', 'pytest-cov', 'mock']
